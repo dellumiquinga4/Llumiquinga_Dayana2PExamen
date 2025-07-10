@@ -71,10 +71,9 @@ public interface MovimientoCuentaRepository extends MongoRepository<MovimientoCu
 
     long countByNumeroCuentaAndFechaMovimientoBetween(String numeroCuenta, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
-    // Método para obtener el último movimiento de una cuenta (para validaciones)
+    
     Optional<MovimientoCuenta> findTopByNumeroCuentaOrderByFechaMovimientoDesc(String numeroCuenta);
 
-    // Método para obtener movimientos ordenados por fecha descendente
     List<MovimientoCuenta> findByNumeroCuentaOrderByFechaMovimientoDesc(String numeroCuenta);
 
     Page<MovimientoCuenta> findByNumeroCuentaOrderByFechaMovimientoDesc(String numeroCuenta, Pageable pageable);

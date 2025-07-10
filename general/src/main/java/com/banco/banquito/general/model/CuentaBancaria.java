@@ -31,9 +31,9 @@ public class CuentaBancaria {
 
     private String clienteNombre;
 
-    private String tipoCuenta; // AHORROS, CORRIENTE, PLAZO_FIJO, VISTA
+    private String tipoCuenta; 
 
-    private String estadoCuenta; // ACTIVA, INACTIVA, BLOQUEADA, CERRADA
+    private String estadoCuenta; 
 
     private BigDecimal saldoDisponible;
 
@@ -59,12 +59,12 @@ public class CuentaBancaria {
 
     private Integer diasInactividad;
 
-    // Constructor solo para primary key
+    
     public CuentaBancaria(String id) {
         this.id = id;
     }
 
-    // Constructor para crear nueva cuenta
+    
     public CuentaBancaria(String numeroCuenta, String clienteIdentificacion, String clienteNombre, String tipoCuenta) {
         this.numeroCuenta = numeroCuenta;
         this.clienteIdentificacion = clienteIdentificacion;
@@ -96,7 +96,7 @@ public class CuentaBancaria {
         return Objects.hash(id);
     }
 
-    // Métodos de negocio
+    
     public boolean puedeRealizarDebito(BigDecimal monto) {
         if (!permiteDebito || !"ACTIVA".equals(estadoCuenta)) {
             return false;

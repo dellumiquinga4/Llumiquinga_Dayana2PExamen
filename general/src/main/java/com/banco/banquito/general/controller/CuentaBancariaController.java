@@ -28,8 +28,6 @@ import com.banco.banquito.general.service.CuentaBancariaService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -88,12 +86,8 @@ public class CuentaBancariaController {
     public ResponseEntity<CuentaBancariaDTO> getCuentaById(
             @Parameter(description = "ID de la cuenta") @PathVariable String id) {
         
-        try {
-            CuentaBancaria cuenta = service.findById(id);
-            return ResponseEntity.ok(mapper.toDTO(cuenta));
-        } catch (CuentaNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        CuentaBancaria cuenta = service.findById(id);
+        return ResponseEntity.ok(mapper.toDTO(cuenta));
     }
 
     @GetMapping("/numero/{numeroCuenta}")
@@ -105,12 +99,8 @@ public class CuentaBancariaController {
     public ResponseEntity<CuentaBancariaDTO> getCuentaByNumero(
             @Parameter(description = "Número de cuenta") @PathVariable String numeroCuenta) {
         
-        try {
-            CuentaBancaria cuenta = service.findByNumeroCuenta(numeroCuenta);
-            return ResponseEntity.ok(mapper.toDTO(cuenta));
-        } catch (CuentaNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        CuentaBancaria cuenta = service.findByNumeroCuenta(numeroCuenta);
+        return ResponseEntity.ok(mapper.toDTO(cuenta));
     }
 
     @GetMapping("/cliente/{clienteIdentificacion}")
@@ -204,28 +194,24 @@ public class CuentaBancariaController {
     public ResponseEntity<ConsultaSaldoDTO> consultarSaldo(
             @Parameter(description = "Número de cuenta") @PathVariable String numeroCuenta) {
         
-        try {
-            CuentaBancaria cuenta = service.findByNumeroCuenta(numeroCuenta);
-            
-            ConsultaSaldoDTO consultaSaldo = new ConsultaSaldoDTO();
-            consultaSaldo.setNumeroCuenta(cuenta.getNumeroCuenta());
-            consultaSaldo.setClienteNombre(cuenta.getClienteNombre());
-            consultaSaldo.setTipoCuenta(cuenta.getTipoCuenta());
-            consultaSaldo.setEstadoCuenta(cuenta.getEstadoCuenta());
-            consultaSaldo.setSaldoDisponible(cuenta.getSaldoDisponible());
-            consultaSaldo.setSaldoContable(cuenta.getSaldoContable());
-            consultaSaldo.setLimiteSobregiro(cuenta.getLimiteSobregiro());
-            consultaSaldo.setSaldoDisponibleTotal(cuenta.getSaldoDisponible().add(cuenta.getLimiteSobregiro()));
-            consultaSaldo.setMoneda(cuenta.getMoneda());
-            consultaSaldo.setFechaUltimaActualizacion(cuenta.getFechaUltimaActualizacion());
-            consultaSaldo.setDiasInactividad(cuenta.getDiasInactividad());
-            consultaSaldo.setPermiteDebito(cuenta.getPermiteDebito());
-            consultaSaldo.setPermiteCredito(cuenta.getPermiteCredito());
-            
-            return ResponseEntity.ok(consultaSaldo);
-        } catch (CuentaNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        CuentaBancaria cuenta = service.findByNumeroCuenta(numeroCuenta);
+        
+        ConsultaSaldoDTO consultaSaldo = new ConsultaSaldoDTO();
+        consultaSaldo.setNumeroCuenta(cuenta.getNumeroCuenta());
+        consultaSaldo.setClienteNombre(cuenta.getClienteNombre());
+        consultaSaldo.setTipoCuenta(cuenta.getTipoCuenta());
+        consultaSaldo.setEstadoCuenta(cuenta.getEstadoCuenta());
+        consultaSaldo.setSaldoDisponible(cuenta.getSaldoDisponible());
+        consultaSaldo.setSaldoContable(cuenta.getSaldoContable());
+        consultaSaldo.setLimiteSobregiro(cuenta.getLimiteSobregiro());
+        consultaSaldo.setSaldoDisponibleTotal(cuenta.getSaldoDisponible().add(cuenta.getLimiteSobregiro()));
+        consultaSaldo.setMoneda(cuenta.getMoneda());
+        consultaSaldo.setFechaUltimaActualizacion(cuenta.getFechaUltimaActualizacion());
+        consultaSaldo.setDiasInactividad(cuenta.getDiasInactividad());
+        consultaSaldo.setPermiteDebito(cuenta.getPermiteDebito());
+        consultaSaldo.setPermiteCredito(cuenta.getPermiteCredito());
+        
+        return ResponseEntity.ok(consultaSaldo);
     }
 
     @PostMapping
@@ -238,12 +224,8 @@ public class CuentaBancariaController {
     public ResponseEntity<CuentaBancariaDTO> crearCuenta(
             @Parameter(description = "Datos de la cuenta a crear") @Valid @RequestBody CrearCuentaDTO crearCuentaDTO) {
         
-        try {
-            CuentaBancaria cuenta = service.crearCuenta(crearCuentaDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(cuenta));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        CuentaBancaria cuenta = service.crearCuenta(crearCuentaDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(cuenta));
     }
 
     @PatchMapping("/numero/{numeroCuenta}/bloquear")
@@ -256,14 +238,8 @@ public class CuentaBancariaController {
     public ResponseEntity<CuentaBancariaDTO> bloquearCuenta(
             @Parameter(description = "Número de cuenta") @PathVariable String numeroCuenta) {
         
-        try {
-            CuentaBancaria cuenta = service.bloquearCuenta(numeroCuenta);
-            return ResponseEntity.ok(mapper.toDTO(cuenta));
-        } catch (CuentaNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        CuentaBancaria cuenta = service.bloquearCuenta(numeroCuenta);
+        return ResponseEntity.ok(mapper.toDTO(cuenta));
     }
 
     @PatchMapping("/numero/{numeroCuenta}/desbloquear")
@@ -276,14 +252,8 @@ public class CuentaBancariaController {
     public ResponseEntity<CuentaBancariaDTO> desbloquearCuenta(
             @Parameter(description = "Número de cuenta") @PathVariable String numeroCuenta) {
         
-        try {
-            CuentaBancaria cuenta = service.desbloquearCuenta(numeroCuenta);
-            return ResponseEntity.ok(mapper.toDTO(cuenta));
-        } catch (CuentaNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        CuentaBancaria cuenta = service.desbloquearCuenta(numeroCuenta);
+        return ResponseEntity.ok(mapper.toDTO(cuenta));
     }
 
     @GetMapping("/generar-numero")
@@ -297,7 +267,7 @@ public class CuentaBancariaController {
     }
 
     @ExceptionHandler({CuentaNotFoundException.class})
-    public ResponseEntity<String> handleCuentaNotFound(CuentaNotFoundException e) {
+    public ResponseEntity<Void> handleCuentaNotFound(CuentaNotFoundException e) {
         return ResponseEntity.notFound().build();
     }
 
