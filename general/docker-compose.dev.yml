@@ -1,0 +1,155 @@
+version: '3.8'
+
+# Docker Compose para entorno de desarrollo
+# Incluye herramientas adicionales para desarrollo y debugging
+
+services:
+  # Servicio de MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: banquito-mongodb-dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: banquito123
+      MONGO_INITDB_DATABASE: banquito
+    volumes:
+      - mongodb_dev_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./mongo-backup:/backup
+    networks:
+      - banquito-dev-network
+    command: mongod --logpath /dev/null
+
+  # Servicio de la aplicación Spring Boot (desarrollo)
+  banquito-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build  # Solo etapa de construcción para desarrollo
+    container_name: banquito-general-app-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "5005:5005"  # Puerto para debug remoto
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,dev
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: banquito
+      SPRING_DATA_MONGODB_USERNAME: banquito_user
+      SPRING_DATA_MONGODB_PASSWORD: banquito_pass
+      JAVA_OPTS: >
+        -Xmx1g 
+        -Xms512m 
+        -Dspring.profiles.active=docker,dev
+        -Dspring.devtools.restart.enabled=true
+        -Xdebug 
+        -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=*:5005
+    volumes:
+      - ./src:/app/src:ro  # Hot reload del código fuente
+      - ./target:/app/target
+      - maven_cache:/root/.m2
+    depends_on:
+      - mongodb
+    networks:
+      - banquito-dev-network
+
+  # Mongo Express (Interfaz web para MongoDB)
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: banquito-mongo-express-dev
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: banquito123
+      ME_CONFIG_MONGODB_URL: mongodb://admin:banquito123@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+      ME_CONFIG_SITE_BASEURL: /mongo-express/
+    depends_on:
+      - mongodb
+    networks:
+      - banquito-dev-network
+
+  # Redis para caching (desarrollo)
+  redis:
+    image: redis:7-alpine
+    container_name: banquito-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass redisbanquito
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - banquito-dev-network
+
+  # Prometheus para métricas
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: banquito-prometheus-dev
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_dev_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - banquito-dev-network
+
+  # Grafana para visualización
+  grafana:
+    image: grafana/grafana:latest
+    container_name: banquito-grafana-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - grafana_dev_data:/var/lib/grafana
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - banquito-dev-network
+
+  # Mailhog para testing de emails
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: banquito-mailhog-dev
+    restart: unless-stopped
+    ports:
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP
+    networks:
+      - banquito-dev-network
+
+volumes:
+  mongodb_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  prometheus_dev_data:
+    driver: local
+  grafana_dev_data:
+    driver: local
+  maven_cache:
+    driver: local
+
+networks:
+  banquito-dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

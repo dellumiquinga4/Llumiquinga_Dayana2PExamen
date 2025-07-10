@@ -29,7 +29,7 @@ public class MovimientoCuenta {
     @Indexed
     private String numeroComprobante;
 
-    private String tipoMovimiento; // DEBITO, CREDITO
+    private String tipoMovimiento; 
 
     private BigDecimal monto;
 
@@ -61,12 +61,12 @@ public class MovimientoCuenta {
 
     private String movimientoReverso;
 
-    // Constructor solo para primary key
+    
     public MovimientoCuenta(String id) {
         this.id = id;
     }
 
-    // Constructor para crear nuevo movimiento
+    
     public MovimientoCuenta(String numeroCuenta, String numeroComprobante, String tipoMovimiento, 
                            BigDecimal monto, BigDecimal saldoAnterior, String concepto) {
         this.numeroCuenta = numeroCuenta;
@@ -80,7 +80,7 @@ public class MovimientoCuenta {
         this.procesado = false;
         this.reversado = false;
         
-        // Calcular saldo posterior
+      
         if ("DEBITO".equals(tipoMovimiento)) {
             this.saldoPosterior = saldoAnterior.subtract(monto);
         } else {
@@ -101,7 +101,6 @@ public class MovimientoCuenta {
         return Objects.hash(id);
     }
 
-    // Métodos de negocio
     public void procesar() {
         this.procesado = true;
         this.fechaValor = LocalDateTime.now();

@@ -96,25 +96,24 @@ public class CuentaBancariaService {
     public CuentaBancaria crearCuenta(CrearCuentaDTO crearCuentaDTO) {
         logger.info("Creando nueva cuenta bancaria para cliente: {}", crearCuentaDTO.getClienteIdentificacion());
         
-        // Validar que el número de cuenta no exista
+        
         if (repository.existsByNumeroCuenta(crearCuentaDTO.getNumeroCuenta())) {
             throw new RuntimeException("Ya existe una cuenta con el número: " + crearCuentaDTO.getNumeroCuenta());
         }
         
-        // Validar regla de negocio: máximo 5 cuentas por cliente
+    
         long cuentasCliente = repository.countByClienteIdentificacion(crearCuentaDTO.getClienteIdentificacion());
         if (cuentasCliente >= 5) {
             throw new RuntimeException("El cliente ya tiene el máximo de 5 cuentas permitidas");
         }
         
-        // Validar regla de negocio: solo una cuenta de plazo fijo por cliente
+
         if ("PLAZO_FIJO".equals(crearCuentaDTO.getTipoCuenta())) {
             if (repository.existsByClienteIdentificacionAndTipoCuenta(crearCuentaDTO.getClienteIdentificacion(), "PLAZO_FIJO")) {
                 throw new RuntimeException("El cliente ya tiene una cuenta de plazo fijo");
             }
         }
         
-        // Crear la cuenta
         CuentaBancaria cuenta = new CuentaBancaria(
             crearCuentaDTO.getNumeroCuenta(),
             crearCuentaDTO.getClienteIdentificacion(),
@@ -122,7 +121,7 @@ public class CuentaBancariaService {
             crearCuentaDTO.getTipoCuenta()
         );
         
-        // Asignar valores opcionales
+        
         if (crearCuentaDTO.getSaldoInicial() != null) {
             cuenta.setSaldoDisponible(crearCuentaDTO.getSaldoInicial());
             cuenta.setSaldoContable(crearCuentaDTO.getSaldoInicial());

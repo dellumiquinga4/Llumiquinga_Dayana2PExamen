@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Servicio de MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: banquito-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: banquito123
+      MONGO_INITDB_DATABASE: banquito
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - banquito-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Servicio de la aplicación Spring Boot
+  banquito-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: banquito-general-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: banquito
+      SPRING_DATA_MONGODB_USERNAME: banquito_user
+      SPRING_DATA_MONGODB_PASSWORD: banquito_pass
+      JAVA_OPTS: "-Xmx512m -Xms256m -Dspring.profiles.active=docker"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - banquito-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Mongo Express (Interfaz web para MongoDB)
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: banquito-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: banquito123
+      ME_CONFIG_MONGODB_URL: mongodb://admin:banquito123@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - banquito-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  banquito-network:
+    driver: bridge 
